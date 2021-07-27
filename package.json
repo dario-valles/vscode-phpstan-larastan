@@ -1,0 +1,130 @@
+{
+  "name": "phpstan-larastan",
+  "displayName": "PHP Static Analysis For PHP and Laravel",
+  "description": "Static analysis support for PHP and Laravel with PhpStan and LaraStan",
+  "version": "1.0.0",
+  "license": "MIT",
+  "publisher": "ddarkonen",
+  "engines": {
+    "vscode": "^1.40.0"
+  },
+  "icon": "images/icon.png",
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:php"
+  ],
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/dario-valles/vscode-phpstan-larastan"
+  },
+  "main": "./out/extension",
+  "contributes": {
+    "configuration": [
+      {
+        "type": "object",
+        "title": "PhpStan Configuration",
+        "properties": {
+          "phpstan.level": {
+            "type": "string",
+            "default": "max",
+            "description": "PhpStan rule levels 0-7, \"config\" indicates that it's set in config file"
+          },
+          "phpstan.noProgress": {
+            "type": "boolean",
+            "default": true,
+            "description": "PhpStan no progress output"
+          },
+          "phpstan.memoryLimit": {
+            "type": "string",
+            "default": "512M",
+            "description": "PhpStan memory limit"
+          },
+          "phpstan.configuration": {
+            "type": "string",
+            "default": null,
+            "description": "PhpStan configuration path"
+          },
+          "phpstan.autoloadFile": {
+            "type": "string",
+            "default": null,
+            "description": "PhpStan autoload-file path"
+          },
+          "phpstan.debounce": {
+            "type": "number",
+            "default": 2000,
+            "description": "Debounce time on Live Error Tracking"
+          },
+          "phpstan.liveErrorTracking": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable or Disable Live Error Tracking"
+          },
+          "phpstan.tmpPath": {
+            "type": "string",
+            "default": true,
+            "description": "Set Temp Path for LiveErrorTracking temporary files creation"
+          }
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "extension.phpstanLintThisFile",
+        "title": "PhpStan: Lint this file"
+      },
+      {
+        "command": "extension.phpstanLintThisFolder",
+        "title": "PhpStan: Lint this folder"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "extension.phpstanLintThisFolder"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.11.7",
+    "@types/throttle-debounce": "^2.1.0",
+    "@types/vscode": "^1.40.0",
+    "glob": "^7.1.5",
+    "mocha": "^6.2.2",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.4",
+    "vscode-test": "^1.2.2"
+  },
+  "dependencies": {
+    "@semantic-release/github": "^7.2.3",
+    "temp-dir": "^2.0.0",
+    "throttle-debounce": "^3.0.1"
+  },
+  "release": {
+    "branches": "master",
+    "verifyConditions": [
+      "@semantic-release/github"
+    ],
+    "publish": [
+      "@semantic-release/github"
+    ],
+    "success": [
+      "@semantic-release/github"
+    ],
+    "fail": [
+      "@semantic-release/github"
+    ]
+  }
+}
