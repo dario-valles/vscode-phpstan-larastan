@@ -271,6 +271,11 @@ export class PhpStanController {
     let cwd: string = "";
     let stats = fs.statSync(thePath);
     let baseDir: string = "";
+    let projectPath = "";
+    if (workspace.workspaceFolders) {
+      projectPath = workspace.workspaceFolders[0].uri.fsPath;
+    }
+    console.log({ projectPath });
     if (stats.isFile()) {
       baseDir = path.dirname(thePath);
     } else if (stats.isDirectory()) {
@@ -280,23 +285,25 @@ export class PhpStanController {
     }
     args.path = thePath;
 
-    if (!args.configuration && !args.autoloadFile) {
-      args.configuration = this.upFindConfiguration(originalPath || baseDir);
-      if (args.configuration) {
-        cwd = path.dirname(args.configuration);
-      } else {
-        args.autoloadFile = this.upFindAutoLoadFile(originalPath || baseDir);
-      }
-      if (args.autoloadFile) {
-        cwd = path.dirname(args.autoloadFile);
-        cwd = path.dirname(cwd);
-      }
-      if (!cwd && stats.isDirectory()) {
-        cwd = this.downFindRealWorkPath(baseDir);
-      }
-    } else {
+    if (!args.configuration) {
+      args.configuration = this.upFindConfiguration(projectPath);
+      console.log('conf', args.configuration)
+    }
+    
+    if (!args.autoloadFile) {
+      args.autoloadFile = this.upFindAutoLoadFile(projectPath);
+      console.log('autoload', args.autoloadFile)
+
+    }
+
+    if (!cwd && stats.isDirectory()) {
+      cwd = this.downFindRealWorkPath(baseDir);
+    }
+
+    if (args.configuration && args.autoloadFile){
       cwd = this.getCurrentWorkPath(originalPath || baseDir);
     }
+    
     let result = "";
     let errMsg = "";
 
@@ -386,6 +393,7 @@ export class PhpStanController {
     if (args.path) {
       result.push(args.path);
     }
+    console.log(result);
     return result;
   }
 
@@ -446,23 +454,25 @@ export class PhpStanController {
   }
 
   protected upFindAutoLoadFile(baseDir: string) {
-    let baseName: string;
-    let parentName: string;
+
     let autoLoadFilePath: string;
-    baseName = baseDir;
-    parentName = path.dirname(baseName);
-    autoLoadFilePath = path.join(baseName, "vendor/autoload.php");
-    while (1) {
-      if (fs.existsSync(autoLoadFilePath)) {
-        return autoLoadFilePath;
-      } else if (baseName === parentName) {
-        return "";
-      } else {
-        baseName = parentName;
-        parentName = path.dirname(baseName);
-        autoLoadFilePath = path.join(baseName, "vendor/autoload.php");
-      }
+    
+    autoLoadFilePath = path.join(baseDir, "vendor/autoload.php");
+    if (fs.existsSync(autoLoadFilePath)) {
+      return autoLoadFilePath;
     }
+    return "";
+    // while (1) {
+    //   if (fs.existsSync(autoLoadFilePath)) {
+    //     return autoLoadFilePath;
+    //   } else if (baseName === parentName) {
+    //     return "";
+    //   } else {
+    //     baseName = parentName;
+    //     parentName = path.dirname(baseName);
+    //     autoLoadFilePath = path.join(baseName, "vendor/autoload.php");
+    //   }
+    // }
   }
 
   protected upFindConfiguration(baseDir: string) {
