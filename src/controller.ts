@@ -13,11 +13,11 @@ import {
   Uri,
 } from "vscode";
 import { debounce } from 'throttle-debounce';
-const tempDirectory = require("temp-dir");
+import * as tempDirectory from "temp-dir";
 import * as child_process from "child_process";
 import * as path from "path";
-import * as fs from "fs";
-import * as process from "process";
+import { writeFileSync, existsSync,statSync, constants, accessSync } from "fs";
+import { platform } from "process";
 
 interface PhpStanOutput {
   totals: {
@@ -46,7 +46,7 @@ interface PhpStanArgs {
   path?: string;
   debounce?: number;
   liveErrorTracking?: boolean;
-  tmpPath: string
+  tmpPath?: string
 }
 
 export class PhpStanController {
@@ -57,11 +57,10 @@ export class PhpStanController {
   private _statusBarItem: StatusBarItem;
   private _commandForFile: Disposable;
   private _commandForFolder: Disposable;
-  private _config: PhpStanArgs = {
-    tmpPath: tempDirectory,
-  };
+  private _config: PhpStanArgs = {};
 
   public constructor() {
+    console.log({tempDirectory})
     const subscriptions: Disposable[] = [];
 
     workspace.onDidChangeConfiguration(this._initConfig, this, subscriptions);
@@ -86,12 +85,13 @@ export class PhpStanController {
           const documentText = editor.document.getText();
           const originalPath = editor.document.uri.path;
           const originalName = editor.document.fileName.split('/').slice(-1);
+          window.showInformationMessage("" + this._config.tmpPath);
           const document = {
-            fileName: `${this._config.tmpPath}/${originalName}`,
+            fileName: `${this._config.tmpPath || tempDirectory}/${originalName}`,
             isClosed: false,
             languageId: "php",
           };
-          fs.writeFileSync(document.fileName, documentText);
+          writeFileSync(document.fileName, documentText);
           this.shouldAnalyseFile()(document, originalPath);
         } else {
           this.shouldAnalyseFile();
@@ -141,39 +141,27 @@ export class PhpStanController {
 
   private _initPhpstan() {
     const vendorPath = "vendor/bin/phpstan";
-    const phpstanPath = fs.existsSync("vendor/bin/phpstan")
+    const phpstanPath = existsSync("vendor/bin/phpstan")
       ? vendorPath
       : "phpstan";
-    this._phpstan = process.platform === "win32" ? "phpstan.bat" : phpstanPath;
+    this._phpstan = platform === "win32" ? "phpstan.bat" : phpstanPath;
   }
 
   private _initConfig() {
     const workspace_config = workspace.getConfiguration();
 
-    this._config.tmpPath = workspace_config.get(
-      "phpstan.tmpPath",
-      tempDirectory
-    );
+    this._config.tmpPath = workspace_config.get("phpstan.tmpPath", tempDirectory);
     this._config.debounce = workspace_config.get("phpstan.debounce", 2000);
-    this._config.liveErrorTracking = workspace_config.get(
-      "phpstan.liveErrorTracking",
-      true
-    );
-    this._config.configuration = workspace_config.get(
-      "phpstan.configuration",
-      undefined
-    );
-    this._config.level = workspace_config.get("phpstan.level", "max");
-    this._config.memoryLimit = workspace_config.get(
-      "phpstan.memoryLimit",
-      "512M"
-    );
+    this._config.liveErrorTracking = workspace_config.get("phpstan.liveErrorTracking", true);
+    this._config.configuration = workspace_config.get("phpstan.configuration",undefined);
+    this._config.level = workspace_config.get("phpstan.level", 5);
+    this._config.memoryLimit = workspace_config.get("phpstan.memoryLimit", "1G");
     this._config.noProgress = workspace_config.get("phpstan.noProgress", true);
 
     const autoloadPath = "vendor/autoload.php";
     this._config.autoloadFile = workspace_config.get(
       "phpstan.autoloadFile",
-      fs.existsSync(autoloadPath) ? autoloadPath : undefined
+      existsSync(autoloadPath) ? autoloadPath : undefined
     );
   }
 
@@ -269,13 +257,13 @@ export class PhpStanController {
     this._statusBarItem.show();
     let args: PhpStanArgs = { ...this._config };
     let cwd: string = "";
-    let stats = fs.statSync(thePath);
+    let stats = statSync(thePath);
     let baseDir: string = "";
     let projectPath = "";
     if (workspace.workspaceFolders) {
       projectPath = workspace.workspaceFolders[0].uri.fsPath;
     }
-    console.log({ projectPath });
+
     if (stats.isFile()) {
       baseDir = path.dirname(thePath);
     } else if (stats.isDirectory()) {
@@ -287,12 +275,10 @@ export class PhpStanController {
 
     if (!args.configuration) {
       args.configuration = this.upFindConfiguration(projectPath);
-      console.log('conf', args.configuration)
     }
     
     if (!args.autoloadFile) {
       args.autoloadFile = this.upFindAutoLoadFile(projectPath);
-      console.log('autoload', args.autoloadFile)
 
     }
 
@@ -306,7 +292,7 @@ export class PhpStanController {
     
     let result = "";
     let errMsg = "";
-
+console.log(args)
     let phpstan = child_process.spawn(
       this.makeCommandPath(cwd),
       this.makeCommandArgs(args),
@@ -328,7 +314,6 @@ export class PhpStanController {
       }
 
       if (code === 0) {
-        // no error
         this._statusBarItem.text = "[phpstan] passed";
       } else if (errMsg) {
         // phpstan failed
@@ -351,7 +336,7 @@ export class PhpStanController {
 
   protected makeCommandPath(cwd: string) {
     let binDir = "vendor/bin";
-    const baseName = process.platform === "win32" ? "phpstan.bat" : "phpstan";
+    const baseName = platform === "win32" ? "phpstan.bat" : "phpstan";
     try {
       binDir = child_process
         .execSync("composer config bin-dir", { cwd })
@@ -360,7 +345,7 @@ export class PhpStanController {
     } catch (err) {}
     const binary = path.resolve(cwd, binDir, baseName);
     try {
-      fs.accessSync(binary, fs.constants.X_OK);
+      accessSync(binary, constants.X_OK);
       return binary;
     } catch (err) {
       return this._phpstan;
@@ -441,10 +426,10 @@ export class PhpStanController {
     let tempPath;
     for (let i in dirs) {
       workPath = path.join(baseDir, dirs[i]);
-      if (fs.existsSync(workPath)) {
+      if (existsSync(workPath)) {
         for (let j in targets) {
           tempPath = path.join(workPath, targets[j]);
-          if (fs.existsSync(tempPath)) {
+          if (existsSync(tempPath)) {
             return workPath;
           }
         }
@@ -458,45 +443,24 @@ export class PhpStanController {
     let autoLoadFilePath: string;
     
     autoLoadFilePath = path.join(baseDir, "vendor/autoload.php");
-    if (fs.existsSync(autoLoadFilePath)) {
+    if (existsSync(autoLoadFilePath)) {
       return autoLoadFilePath;
     }
     return "";
-    // while (1) {
-    //   if (fs.existsSync(autoLoadFilePath)) {
-    //     return autoLoadFilePath;
-    //   } else if (baseName === parentName) {
-    //     return "";
-    //   } else {
-    //     baseName = parentName;
-    //     parentName = path.dirname(baseName);
-    //     autoLoadFilePath = path.join(baseName, "vendor/autoload.php");
-    //   }
-    // }
   }
 
   protected upFindConfiguration(baseDir: string) {
-    let baseName: string;
-    let parentName: string;
-    let config1: string;
-    let config2: string;
-    baseName = baseDir;
-    parentName = path.dirname(baseName);
-    config1 = path.join(baseName, "phpstan.neon");
-    config2 = path.join(baseName, "phpstan.neon.dist");
-    while (1) {
-      if (fs.existsSync(config1)) {
-        return config1;
-      } else if (fs.existsSync(config2)) {
-        return config2;
-      } else if (baseName === parentName) {
-        return "";
-      } else {
-        baseName = parentName;
-        parentName = path.dirname(baseName);
-        config1 = path.join(baseName, "phpstan.neon");
-        config2 = path.join(baseName, "phpstan.neon.dist");
-      }
+    const config1 = path.join(baseDir, "phpstan.neon");
+    const config2 = path.join(baseDir, "phpstan.neon.dist");
+
+    if (existsSync(config1)) {
+      return config1
     }
+    if (existsSync(config2)) {
+      return config2
+    }
+
+    return ""
+
   }
 }
