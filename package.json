@@ -2,7 +2,7 @@
   "name": "phpstan-larastan",
   "displayName": "PHP Static Analysis For PHP and Laravel",
   "description": "Static analysis support for PHP and Laravel with PhpStan and LaraStan",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "publisher": "ddarkonen",
   "engines": {
@@ -19,17 +19,17 @@
     "type": "github",
     "url": "https://github.com/dario-valles/vscode-phpstan-larastan"
   },
-  "main": "./out/extension",
+  "main": "./dist/extension",
   "contributes": {
     "configuration": [
       {
         "type": "object",
-        "title": "PhpStan Configuration",
+        "title": "PhpStan - LaraStan Configuration",
         "properties": {
           "phpstan.level": {
             "type": "string",
-            "default": "max",
-            "description": "PhpStan rule levels 0-7, \"config\" indicates that it's set in config file"
+            "default": "5",
+            "description": "PhpStan rule levels 0-8, \"config\" indicates that it's set in config file"
           },
           "phpstan.noProgress": {
             "type": "boolean",
@@ -38,7 +38,7 @@
           },
           "phpstan.memoryLimit": {
             "type": "string",
-            "default": "512M",
+            "default": "1G",
             "description": "PhpStan memory limit"
           },
           "phpstan.configuration": {
@@ -63,7 +63,6 @@
           },
           "phpstan.tmpPath": {
             "type": "string",
-            "default": true,
             "description": "Set Temp Path for LiveErrorTracking temporary files creation"
           }
         }
@@ -89,11 +88,15 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
-    "test": "node ./out/test/runTest.js"
+    "package": "npx vsce package",
+    "publish": "npx vsce publish",
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode none",
+    "watch": "webpack --mode none --watch",
+    "postinstall": "node node_modules/vscode/bin/install",
+    "just-test": "node node_modules/vscode/bin/test",
+    "test-compile": "tsc -p ./ && npm run compile",
+    "test": "npm run test-compile && node node_modules/vscode/bin/test"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
@@ -101,11 +104,15 @@
     "@types/node": "^12.11.7",
     "@types/throttle-debounce": "^2.1.0",
     "@types/vscode": "^1.40.0",
+    "esbuild": "^0.12.16",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
+    "ts-loader": "^9.2.4",
     "tslint": "^5.20.0",
     "typescript": "^3.6.4",
-    "vscode-test": "^1.2.2"
+    "vscode-test": "^1.2.2",
+    "webpack": "^5.47.0",
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {
     "@semantic-release/github": "^7.2.3",
