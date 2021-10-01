@@ -118,7 +118,7 @@
     "throttle-debounce": "^3.0.1"
   },
   "release": {
-    "branches": "master",
+    "branches": "main",
     "verifyConditions": [
       "@semantic-release/github"
     ],
