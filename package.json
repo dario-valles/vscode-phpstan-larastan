@@ -2,7 +2,7 @@
   "name": "phpstan-larastan",
   "displayName": "PHP Static Analysis For PHP and Laravel",
   "description": "Static analysis support for PHP and Laravel with PhpStan and LaraStan",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "publisher": "ddarkonen",
   "engines": {

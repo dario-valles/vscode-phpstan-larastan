@@ -6,11 +6,12 @@ A modified version of the great work of [breeze2](https://github.com/breeze2/vsc
 
 I made made my own version this extension because I need a plug and play extension that works with live type checking and only required conf is to have installed phpstan and larastan to work with Laravel projects.
 
+
+
+![](https://raw.githubusercontent.com/dario-valles/vscode-phpstan-larastan/main/images/larastan-error.gif)
 ## Features
 
-Type checking while you write
-
-auto lint your php code, or use the command:
+Type checking while you write auto lint your php code, or use the command:
 
 * `PhpStan: Lint this file`
 * `PhpStan: Lint this folder`
@@ -95,7 +96,15 @@ This disk is not persistent so you should create the RAMDisk on every restart (g
 
 
 ### 1.0.0
-* Initial release of vscode-phpstan-larastan
+* Initial release of vscode-phpstan-larastan with live type checking
+### 1.0.1
+* Automatic detection of autoload and phpstan.neon for Laravel
+
+### 1.0.2
+* Compile extension with webpack size reduce 100 times
+
+### 1.0.3
+* Update readme and add gif animation
 
 ## Atributions
 Icon by: [icon-monk](https://www.flaticon.es/autores/icon-monk)
