@@ -1,5 +1,14 @@
 # Change Log
 
+### [1.0.4] 10th October 2021
+* Fix typos. thanks to [Michael Blair](https://github.com/mhkb)
+
+### [1.0.3]
+* Update readme and add gif animation
+
+### [1.0.2]
+* Compile extension with webpack size reduce 100 times
+
 ## [1.0.1] 29th July, 2021
 - Automatic detection of autoload file on Laravel
 - Automatic detection of phpstan.neon on Laravel
