@@ -1,4 +1,6 @@
 # Change Log
+### [1.0.6] 15th January 2022
+* Improve performance: Analysis triggered when moving cursor to different line reported by [jalgaba](https://github.com/jalgaba)
 
 ### [1.0.4] 10th October 2021
 * Fix typos. thanks to [Michael Blair](https://github.com/mhkb)

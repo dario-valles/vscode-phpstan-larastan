@@ -58,6 +58,7 @@ export class PhpStanController {
   private _commandForFile: Disposable;
   private _commandForFolder: Disposable;
   private _config: PhpStanArgs = {};
+  public version = 0;
 
   public constructor() {
     const subscriptions: Disposable[] = [];
@@ -76,6 +77,11 @@ export class PhpStanController {
 
     window.onDidChangeTextEditorSelection(
       (e) => {
+        const version = e.textEditor.document.version;
+        if (this.version === version) {
+          return
+        }
+        this.version = version;
         if (
           !this._config.liveErrorTracking ||
           e.textEditor.document.languageId != "php"
@@ -305,7 +311,7 @@ export class PhpStanController {
     phpstan.stderr.on("data", (data) => {
       errMsg += data.toString();
     });
-    
+
     phpstan.stdout.on("data", (data) => {
       result += data.toString();
     });

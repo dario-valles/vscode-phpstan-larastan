@@ -1,8 +1,8 @@
 {
   "name": "phpstan-larastan",
-  "displayName": "PHP Static Analysis For PHP and Laravel",
-  "description": "Static analysis support for PHP and Laravel with PhpStan and LaraStan",
-  "version": "1.0.4",
+  "displayName": "Real Time PHP Static Analysis For PHP and Laravel",
+  "description": "Real Time Static analysis support for PHP and Laravel with PhpStan and LaraStan",
+  "version": "1.0.6",
   "license": "MIT",
   "publisher": "ddarkonen",
   "engines": {
